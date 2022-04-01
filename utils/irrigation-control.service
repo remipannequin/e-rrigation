@@ -1,0 +1,15 @@
+[Unit]
+Description=Irrigation control and data logging
+After=influxdb.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/Irrigation/
+ExecStart=/home/pi/Irrigation/control.py
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target

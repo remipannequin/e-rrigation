@@ -1,0 +1,5 @@
+~K
+killall
+mac 0
+collect | timestamp | binprint &
+netcmd { repeat 0 60 { randwait 60 collect-view-data | send 31 } }
