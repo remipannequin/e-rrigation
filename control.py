@@ -11,6 +11,21 @@ from Phidget22.Devices.VoltageInput import VoltageInput
 from Phidget22.Devices.TemperatureSensor import TemperatureSensor
 from influxdb import InfluxDBClient
 
+# dictionary that give names according to ids
+NAMES = {"369507//1": "pump",
+         "369507//2": "ev1",
+         "369507//3": "ev2",
+         "107839//3": "pot2_1",
+         "107839//4": "pot2_2",
+         "107839//5": "pot1_1",
+         "107839//7": "main_flow",
+         "285105//0": "pot1",
+         "285105//1": "pot2",
+         "285105//2": "water_reserve",
+         "285105//4": "ambiant",
+         "167.121": "pot1",
+         "81.174": "pot2"}
+
 
 class ActuatorController:
 
@@ -59,7 +74,8 @@ class ActuatorController:
         for (v, n, tag) in zip(s, self.names, self.tags):
             f = {n: v}
             points.append({"measurement": "actuators",
-                     "tags" : {"id": tag},
+                     "tags" : {"id": tag,
+                               "name": NAMES[tag]},
                      "fields": f})
             state.update(f, tag=tag)
         tsdb.write_points(points)
@@ -162,7 +178,8 @@ class SkyMotesSensor:
                           "light_visible": l_vis,
                           "light_visible_ir": l_vis_ir}
                 point = {"measurement": "sky",
-                        "tags" : {"node_id": nodeid},
+                        "tags" : {"id": nodeid,
+                                  "name": NAMES[nodeid]},
                         "fields": fields}
 
                 tsdb.write_points([point])
@@ -215,7 +232,8 @@ class MoistureSensor:
             f = {"voltage": v,
                 "normalized_voltage": v_}
             points.append({"measurement": "soil_moisture",
-                           "tags": {"id": tag},
+                           "tags": {"id": tag,
+                                    "name": NAMES[tag]},
                            "fields": f})
             state.update(f, tag)
         tsdb.write_points(points)
@@ -258,7 +276,8 @@ class FlowSensor:
         f = {"flow": v,
              "flow_row": v_}
         p = {"measurement": "flow",
-             "tags" : {"id": self.tag},
+             "tags" : {"id": self.tag,
+                       "name": NAMES[self.tag]},
              "fields": f}
         state.update(f)
         tsdb.write_points([p])
@@ -289,6 +308,12 @@ class ThermoCoupleSensor:
         self.tc[2].openWaitForAttachment(5000)
         self.tags.append("285105//2")
 
+        self.tc.append(TemperatureSensor())
+        self.tc[3].setDeviceSerialNumber(285105)
+        self.tc[3].setChannel(4)
+        self.tc[3].openWaitForAttachment(5000)
+        self.tags.append("285105//4")
+
     
     def run(self, tsdb, state):
         """Get the values, process them, update the state variable and write in the tsdb."""
@@ -298,7 +323,8 @@ class ThermoCoupleSensor:
         for (temp, tag) in zip(temps, self.tags):        
             f = {"temperature": temp}
             points.append({"measurement": "thermocouples",
-                           "tags": {"id": tag},
+                           "tags": {"id": tag,
+                                    "name": NAMES[tag]},
                            "fields": f})
             state.update(f, tag)
         tsdb.write_points(points)
